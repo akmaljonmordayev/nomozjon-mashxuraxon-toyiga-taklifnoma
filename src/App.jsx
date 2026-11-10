@@ -55,7 +55,7 @@ function Grapes({ open }) {
   )
 }
 
-function Intro({ onDone }) {
+function Intro({ guest, onDone }) {
   const [open, setOpen] = useState(false)
   const burstHearts = useMemo(() => Array.from({ length: LITE ? 14 : 24 }, () => ({
     dx: rand(-48, 48), dy: rand(-70, -20), rot: rand(-60, 60), s: rand(.7, 2.1), d: rand(0, .5), t: rand(1.8, 3.2),
@@ -71,7 +71,7 @@ function Intro({ onDone }) {
       <div className="door door-l"><i className="ring" /></div>
       <div className="door door-r"><i className="ring" /></div>
       <div className="intro-content">
-        <p className="intro-small">Hurmatli mehmon,<br />sizga atalgan taklifnoma</p>
+        <p className="intro-small">{guest ? `Hurmatli ${guest},` : 'Hurmatli mehmon,'}<br />sizga atalgan taklifnoma</p>
         <button className="uzum-btn" onClick={start} aria-label="Taklifnomani ochish">
           <Gul className="rosette" />
           <Grapes open={open} />
@@ -350,7 +350,17 @@ function Doira() {
   )
 }
 
+/* Havola oxiridagi so'z mehmon ismi bo'ladi: /Akmal, /Akmal_aka, /Akmal%20aka */
+function guestFromPath() {
+  try {
+    const seg = decodeURIComponent(location.pathname.split('/').filter(Boolean)[0] || '')
+    return seg.replace(/[-_+.]+/g, ' ').replace(/[^\p{L}\p{M}'’ʻ\s]/gu, '').replace(/\s+/g, ' ').trim().slice(0, 40)
+      .split(' ').map((w) => (w ? w[0].toLocaleUpperCase('uz') + w.slice(1) : w)).join(' ')
+  } catch { return '' }
+}
+
 export default function App() {
+  const guest = useMemo(guestFromPath, [])
   const [intro, setIntro] = useState(true)
   const [entered, setEntered] = useState(false)
   const [sound, setSound] = useState(true)
@@ -417,7 +427,7 @@ export default function App() {
   }, [intro])
 
   const done = () => { setEntered(true); setTimeout(() => { setIntro(false); salute(); startAuto() }, 1300) }
-  const note = 'Hurmatli va qadrli mehmonimiz!'
+  const note = guest ? `Hurmatli ${guest}!` : 'Hurmatli va qadrli mehmonimiz!'
   const marquee = Array.from({ length: 6 }, (_, i) => (
     <span className="mq-item" key={i}>Nomozjon <Heart /> Mashxuraxon <Gul className="mq-gul" /> 22 · 11 · 2026 <Heart /></span>
   ))
@@ -430,7 +440,7 @@ export default function App() {
           {PETALS.map((p, i) => <i key={i} className="petal" style={{ '--l': p.l, '--s': p.s, '--t': p.t, '--d': p.d, '--c': p.c }} />)}
         </div>
       )}
-      {intro && <div className={entered ? 'fade-out' : ''}><Intro onDone={done} /></div>}
+      {intro && <div className={entered ? 'fade-out' : ''}><Intro guest={guest} onDone={done} /></div>}
 
       {!intro && (
         <>
